@@ -1,0 +1,8 @@
+from fastapi import FastAPI
+
+app = FastAPI()
+
+
+@app.get("/")
+def root():
+    return {"message": "Employee API is running"}

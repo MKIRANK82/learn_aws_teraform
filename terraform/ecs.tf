@@ -76,6 +76,10 @@ resource "aws_iam_role_policy" "ecs_task_s3_policy" {
     ]
   })
 }
+resource "aws_cloudwatch_log_group" "employee_api" {
+  name              = "/ecs/learn-employee-api"
+  retention_in_days = 7
+}
 
 resource "aws_ecs_task_definition" "employee_api" {
   family                   = "learn-employee-api"
@@ -90,9 +94,8 @@ resource "aws_ecs_task_definition" "employee_api" {
 
   container_definitions = jsonencode([
     {
-      name  = "employee-api"
-      image = "585706662322.dkr.ecr.ap-south-1.amazonaws.com/learn-employee-api:latest"
-
+      name      = "employee-api"
+      image     = "585706662322.dkr.ecr.ap-south-1.amazonaws.com/learn-employee-api:latest"
       essential = true
 
       portMappings = [
@@ -102,11 +105,19 @@ resource "aws_ecs_task_definition" "employee_api" {
           protocol      = "tcp"
         }
       ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.employee_api.name
+          "awslogs-region"        = "ap-south-1"
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
     }
   ])
 }
-
-
 data "aws_vpc" "default" {
   default = true
 }

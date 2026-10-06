@@ -24,7 +24,7 @@ resource "aws_s3_bucket" "employee_data" {
 }
 
 resource "aws_ecr_repository" "employee_api" {
-  name = "employee-api"
+  name = "learn-employee-api"
 
   image_scanning_configuration {
     scan_on_push = true

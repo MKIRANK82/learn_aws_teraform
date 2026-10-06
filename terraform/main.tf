@@ -21,10 +21,12 @@ provider "aws" {
 
 resource "aws_s3_bucket" "employee_data" {
   bucket = "learn-aws-terraform-employee-data"
+   force_destroy = true
 }
 
 resource "aws_ecr_repository" "learn_employee_api" {
   name = "learn-employee-api"
+  force_delete = true
 
   image_scanning_configuration {
     scan_on_push = true

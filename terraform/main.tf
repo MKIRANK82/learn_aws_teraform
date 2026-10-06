@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "employee_data" {
   bucket = "learn-aws-terraform-employee-data"
 }
 
-resource "aws_ecr_repository" "employee_api" {
+resource "aws_ecr_repository" "learn_employee_api" {
   name = "learn-employee-api"
 
   image_scanning_configuration {
@@ -32,5 +32,5 @@ resource "aws_ecr_repository" "employee_api" {
 }
 
 output "employee_api_ecr_url" {
-  value = aws_ecr_repository.employee_api.repository_url
+  value = aws_ecr_repository.learn_employee_api.repository_url
 }

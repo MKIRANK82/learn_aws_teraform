@@ -129,14 +129,59 @@ data "aws_subnets" "default" {
   }
 }
 
-resource "aws_security_group" "ecs" {
-  name        = "learn-employee-api-ecs-sg"
-  description = "Security group for Employee API ECS tasks"
+
+resource "aws_lb" "employee_api" {
+  name               = "learn-employee-api-alb"
+  internal           = false
+  load_balancer_type = "application"
+
+  security_groups = [
+    aws_security_group.alb.id
+  ]
+
+  subnets = data.aws_subnets.default.ids
+}
+
+resource "aws_lb_target_group" "employee_api" {
+  name        = "learn-employee-api-tg"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip"
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    port                = "traffic-port"
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.employee_api.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.employee_api.arn
+  }
+}
+
+
+
+
+resource "aws_security_group" "alb" {
+  name        = "learn-employee-api-alb-sg"
+  description = "Security group for Employee API ALB"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    from_port   = 8000
-    to_port     = 8000
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -148,6 +193,27 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_security_group" "ecs" {
+  name        = "learn-employee-api-ecs-sg"
+  description = "Security group for Employee API ECS tasks"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
 
 resource "aws_ecs_service" "employee_api" {
   name            = "learn-employee-api-service"
@@ -162,4 +228,18 @@ resource "aws_ecs_service" "employee_api" {
     security_groups  = [aws_security_group.ecs.id]
     assign_public_ip = true
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.employee_api.arn
+    container_name   = "employee-api"
+    container_port   = 8000
+  }
+
+  depends_on = [
+    aws_lb_listener.http
+  ]
+}
+
+output "employee_api_alb_url" {
+  value = "http://${aws_lb.employee_api.dns_name}"
 }

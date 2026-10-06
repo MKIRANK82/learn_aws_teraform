@@ -76,3 +76,32 @@ resource "aws_iam_role_policy" "ecs_task_s3_policy" {
     ]
   })
 }
+
+resource "aws_ecs_task_definition" "employee_api" {
+  family                   = "learn-employee-api"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+
+  cpu    = "256"
+  memory = "512"
+
+  execution_role_arn = aws_iam_role.ecs_execution_role.arn
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "employee-api"
+      image = "585706662322.dkr.ecr.ap-south-1.amazonaws.com/learn-employee-api:latest"
+
+      essential = true
+
+      portMappings = [
+        {
+          containerPort = 8000
+          hostPort      = 8000
+          protocol      = "tcp"
+        }
+      ]
+    }
+  ])
+}

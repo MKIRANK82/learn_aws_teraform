@@ -22,3 +22,15 @@ provider "aws" {
 resource "aws_s3_bucket" "employee_data" {
   bucket = "learn-aws-terraform-employee-data"
 }
+
+resource "aws_ecr_repository" "employee_api" {
+  name = "employee-api"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+output "employee_api_ecr_url" {
+  value = aws_ecr_repository.employee_api.repository_url
+}

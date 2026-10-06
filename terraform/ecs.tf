@@ -137,3 +137,18 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_ecs_service" "employee_api" {
+  name            = "learn-employee-api-service"
+  cluster         = aws_ecs_cluster.employee_api.id
+  task_definition = aws_ecs_task_definition.employee_api.arn
+
+  desired_count = 1
+  launch_type   = "FARGATE"
+
+  network_configuration {
+    subnets          = data.aws_subnets.default.ids
+    security_groups  = [aws_security_group.ecs.id]
+    assign_public_ip = true
+  }
+}
